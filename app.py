@@ -15,7 +15,9 @@ from io import BytesIO
 from function import final_code_generator
 
 app = Flask(__name__)
-
+model , processor = models()
+model = VisionEncoderDecoderModel.from_pretrained("/content/local_nougat_model")
+processor = AutoProcessor.from_pretrained("/content/local_nougat_processor")
 UPLOAD_FOLDER = 'uploads'
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)

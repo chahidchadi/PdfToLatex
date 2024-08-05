@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF to LaTeX Converter</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            text-align: center;
+            padding: 1rem 0;
+            margin-bottom: 2rem;
+        }
+        h1 {
+            margin: 0;
+            font-size: 2.5rem;
+        }
+        .card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        h2 {
+            color: #2c3e50;
+            margin-top: 0;
+        }
+        #uploadForm, #pageSelection, #resultSection {
+            margin-bottom: 2rem;
+        }
+        input[type="file"] {
+            display: none;
+        }
+        .file-upload-label {
+            display: inline-block;
+            padding: 10px 15px;
+            background-color: #3498db;
+            color: #fff;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .file-upload-label:hover {
+            background-color: #2980b9;
+        }
+        button {
+            background-color: #2ecc71;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-size: 1rem;
+        }
+        button:hover {
+            background-color: #27ae60;
+        }
+        button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        #pageThumbnails {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+        }
+        .thumbnail {
+            width: 120px;
+            height: 160px;
+            object-fit: cover;
+            border: 3px solid transparent;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .thumbnail:hover {
+            transform: scale(1.05);
+        }
+        .thumbnail.selected {
+            border-color: #2ecc71;
+            box-shadow: 0 0 10px rgba(46, 204, 113, 0.5);
+        }
+        #result {
+            white-space: pre-wrap;
+            background-color: #ecf0f1;
+            padding: 1rem;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>PDF to LaTeX Converter</h1>
+    </header>
+    
+    <div class="container">
+        <div class="card" id="uploadForm">
+            <h2>Upload Your PDF</h2>
+            <label for="pdfFile" class="file-upload-label">Choose PDF File</label>
+            <input type="file" id="pdfFile" accept=".pdf">
+            <button id="uploadBtn">Upload PDF</button>
+        </div>
+        
+        <div class="card" id="pageSelection" style="display: none;">
+            <h2>Select a Page to Convert</h2>
+            <div id="pageThumbnails"></div>
+            <button id="convertBtn" disabled>Convert to LaTeX</button>
+        </div>
+        
+        <div class="card" id="resultSection" style="display: none;">
+            <h2>Conversion Result</h2>
+            <button id="showResultsBtn">Show LaTeX Code</button>
+            <div id="result"></div>
+        </div>
+    </div>
+    
+    <script>
+        const uploadBtn = document.getElementById('uploadBtn');
+        const convertBtn = document.getElementById('convertBtn');
+        const showResultsBtn = document.getElementById('showResultsBtn');
+        const pageSelection = document.getElementById('pageSelection');
+        const pageThumbnails = document.getElementById('pageThumbnails');
+        const resultSection = document.getElementById('resultSection');
+        const result = document.getElementById('result');
+        let convertedFilename = '';
+        let selectedThumbnail = null;
+
+        uploadBtn.addEventListener('click', async () => {
+            const fileInput = document.getElementById('pdfFile');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Please select a PDF file first.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('pdf', file);
+
+            try {
+                const response = await axios.post('/upload_pdf', formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
+                });
+                convertedFilename = response.data.filename;
+                displayThumbnails(response.data.thumbnails);
+                pageSelection.style.display = 'block';
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred during upload.');
+            }
+        });
+
+        function displayThumbnails(thumbnails) {
+            pageThumbnails.innerHTML = '';
+            thumbnails.forEach((thumbnail, index) => {
+                const img = document.createElement('img');
+                img.src = `data:image/png;base64,${thumbnail}`;
+                img.alt = `Page ${index + 1}`;
+                img.classList.add('thumbnail');
+                img.addEventListener('click', () => selectThumbnail(img, index + 1));
+                pageThumbnails.appendChild(img);
+            });
+        }
+
+        function selectThumbnail(img, pageNum) {
+            if (selectedThumbnail) {
+                selectedThumbnail.classList.remove('selected');
+            }
+            selectedThumbnail = img;
+            selectedThumbnail.classList.add('selected');
+            convertBtn.disabled = false;
+        }
+
+        convertBtn.addEventListener('click', async () => {
+            if (!selectedThumbnail) {
+                alert('Please select a page to convert.');
+                return;
+            }
+
+            const pageNumber = Array.from(pageThumbnails.children).indexOf(selectedThumbnail) + 1;
+
+            try {
+                const response = await axios.post('/process_pdf', {
+                    filename: convertedFilename,
+                    page_number: pageNumber
+                });
+                resultSection.style.display = 'block';
+                alert('Conversion complete. Click "Show LaTeX Code" to view the output.');
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred during conversion.');
+            }
+        });
+
+        showResultsBtn.addEventListener('click', async () => {
+            if (!convertedFilename) {
+                alert('Please convert a PDF file first.');
+                return;
+            }
+            try {
+                const response = await axios.get(`/get_results/${convertedFilename}`);
+                result.textContent = response.data;
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while fetching results.');
+            }
+        });
+    </script>
+</body>
+</html>

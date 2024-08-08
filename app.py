@@ -53,8 +53,8 @@ def pdf_to_latex(filepath, page_number):
     #processor = AutoProcessor.from_pretrained("path/to/local_nougat_processor")
     model = VisionEncoderDecoderModel.from_pretrained("./local_nougat_model")
     processor = AutoProcessor.from_pretrained("./local_nougat_processor")
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    model.to(device)
+    #device = "cuda" if torch.cuda.is_available() else "cpu"
+    #model.to(device)
 
     images = Pdf_Sliser.rasterize_paper(pdf=filepath, return_pil=True)
 

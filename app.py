@@ -16,6 +16,8 @@ from function import final_code_generator
 from function import models
 
 app = Flask(__name__)
+model = VisionEncoderDecoderModel.from_pretrained("facebook/nougat-small")
+processor = AutoProcessor.from_pretrained("facebook/nougat-small")
 UPLOAD_FOLDER = 'uploads'
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
@@ -51,8 +53,8 @@ def generate_thumbnails(filepath):
 def pdf_to_latex(filepath, page_number):
     #model = VisionEncoderDecoderModel.from_pretrained("path/to/local_nougat_model")
     #processor = AutoProcessor.from_pretrained("path/to/local_nougat_processor")
-    model = VisionEncoderDecoderModel.from_pretrained("./local_nougat_model")
-    processor = AutoProcessor.from_pretrained("./local_nougat_processor")
+    #model = VisionEncoderDecoderModel.from_pretrained("./local_nougat_model")
+    #processor = AutoProcessor.from_pretrained("./local_nougat_processor")
     #device = "cuda" if torch.cuda.is_available() else "cpu"
     #model.to(device)
 

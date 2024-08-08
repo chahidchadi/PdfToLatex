@@ -51,8 +51,8 @@ def generate_thumbnails(filepath):
 def pdf_to_latex(filepath, page_number):
     #model = VisionEncoderDecoderModel.from_pretrained("path/to/local_nougat_model")
     #processor = AutoProcessor.from_pretrained("path/to/local_nougat_processor")
-    model = VisionEncoderDecoderModel.from_pretrained("/local_nougat_processor")
-    processor = AutoProcessor.from_pretrained("/local_nougat_processor")
+    model = VisionEncoderDecoderModel.from_pretrained("./local_nougat_processor")
+    processor = AutoProcessor.from_pretrained("./local_nougat_processor")
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model.to(device)
 
